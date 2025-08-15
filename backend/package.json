@@ -1,0 +1,25 @@
+{
+  "name": "rag-system",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "type": "module",
+  "license": "ISC",
+  "keywords": [],
+  "description": "",
+  "dependencies": {
+    "@google/genai": "^1.13.0",
+    "@langchain/community": "^0.3.50",
+    "@langchain/core": "^0.3.70",
+    "@langchain/google-genai": "^0.2.16",
+    "@langchain/pinecone": "^0.2.0",
+    "@langchain/textsplitters": "^0.1.0",
+    "@pinecone-database/pinecone": "^5.1.2",
+    "dotenv": "^16.4.5",
+    "pdf-parse": "^1.1.1",
+    "readline-sync": "^1.4.10"
+  }
+}
