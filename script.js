@@ -1,74 +1,111 @@
-const backendUrl = "http://localhost:5000"; // Change to your backend URL
+const backendUrl = 'http://localhost:5000'; // Change for deployment
 
-const pdfForm = document.getElementById("pdfForm");
-const pdfFile = document.getElementById("pdfFile");
-const uploadStatus = document.getElementById("uploadStatus");
-const chatBox = document.getElementById("chatBox");
-const questionForm = document.getElementById("questionForm");
-const questionInput = document.getElementById("questionInput");
+const pdfForm = document.getElementById('pdfForm');
+const pdfFile = document.getElementById('pdfFile');
+const uploadStatus = document.getElementById('uploadStatus');
+const chatBox = document.getElementById('chatBox');
+const questionForm = document.getElementById('questionForm');
+const questionInput = document.getElementById('questionInput');
 
 let pdfUploaded = false;
 
 // Upload PDF
-pdfForm.addEventListener("submit", async (e) => {
+pdfForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const file = pdfFile.files[0];
   if (!file) return;
 
   const formData = new FormData();
-  formData.append("pdf", file);
+  formData.append('pdf', file);
 
-  uploadStatus.textContent = "Uploading...";
+  // Show "uploading" status
+  // uploadStatus.innerHTML = `
+  // <div class="alert alert-warning">
+  //   <span class="spinner-border spinner-border-sm"></span>
+  //   Uploading & processing PDF... This may take up to 30 seconds
+  // </div>`;
+
+  // After upload success:
+  uploadStatus.innerHTML = `<div class="alert alert-info">Processing PDF...</div>`;
+  const checkInterval = setInterval(async () => {
+    const res = await fetch(`${backendUrl}/status`);
+    const data = await res.json();
+    if (data.status === "done") {
+      clearInterval(checkInterval);
+    uploadStatus.innerHTML = `<div class="alert alert-success">✅ Ready to take questions!</div>`;
+  }
+}, 2000);
+
+
   try {
     const res = await fetch(`${backendUrl}/upload`, {
-      method: "POST",
+      method: 'POST',
       body: formData
     });
+
     if (res.ok) {
       pdfUploaded = true;
-      uploadStatus.textContent = "✅ PDF uploaded successfully!";
+      uploadStatus.innerHTML = `<div class="alert alert-success">✅ PDF uploaded & stored! You can now ask questions.</div>`;
     } else {
-      uploadStatus.textContent = "❌ Failed to upload PDF.";
+      uploadStatus.innerHTML = `<div class="alert alert-danger">❌ Failed to upload PDF.</div>`;
     }
   } catch (err) {
     console.error(err);
-    uploadStatus.textContent = "❌ Error uploading PDF.";
+    uploadStatus.innerHTML = `<div class="alert alert-danger">❌ Error uploading PDF.</div>`;
   }
 });
 
 // Ask Question
-questionForm.addEventListener("submit", async (e) => {
+questionForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!pdfUploaded) {
-    alert("Please upload a PDF first!");
+    alert('⚠️ Please upload a PDF first!');
     return;
   }
 
   const question = questionInput.value.trim();
   if (!question) return;
 
-  addMessage(question, "user");
-  questionInput.value = "";
+  addMessage(question, 'user');
+  questionInput.value = '';
+
+  // Show "thinking" message
+  addMessage('🤔 Thinking...', 'bot');
 
   try {
     const res = await fetch(`${backendUrl}/ask`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question })
     });
+
     const data = await res.json();
-    addMessage(data.answer || "No answer found.", "bot");
+
+    // Remove the "thinking" message
+    removeLastBotMessage();
+
+    // Show answer
+    addMessage(data.answer || 'No answer found.', 'bot');
   } catch (err) {
     console.error(err);
-    addMessage("Error getting answer.", "bot");
+    removeLastBotMessage();
+    addMessage('❌ Error getting answer.', 'bot');
   }
 });
 
 // Add Message to Chat
 function addMessage(text, type) {
-  const msg = document.createElement("div");
-  msg.classList.add("message", type === "user" ? "user-message" : "bot-message");
+  const msg = document.createElement('div');
+  msg.classList.add('message', type === 'user' ? 'user-message' : 'bot-message');
   msg.textContent = text;
   chatBox.appendChild(msg);
   chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Remove last bot message (for removing "thinking" text)
+function removeLastBotMessage() {
+  const messages = chatBox.querySelectorAll('.bot-message');
+  if (messages.length > 0) {
+    messages[messages.length - 1].remove();
+  }
 }
