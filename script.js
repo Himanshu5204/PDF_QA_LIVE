@@ -1,4 +1,4 @@
-const backendUrl = 'http://localhost:5000'; // Change for deployment
+const backendUrl = 'https://pdf-qa-live.onrender.com'; // Change for deployment
 
 const pdfForm = document.getElementById('pdfForm');
 const pdfFile = document.getElementById('pdfFile');
