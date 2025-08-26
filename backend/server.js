@@ -42,30 +42,38 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
     const PDF_PATH = req.file.path;
     const pdfLoader = new PDFLoader(PDF_PATH);
     const rawDocs = await pdfLoader.load();
-    console.log("PDF loaded");
+    console.log('PDF loaded');
 
     const textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize: 1000,
       chunkOverlap: 200
     });
     const chunkedDocs = await textSplitter.splitDocuments(rawDocs);
-    console.log("Chunking completed");
+    console.log('Chunking completed');
 
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GEMINI_API_KEY,
-      model: 'text-embedding-004',
+      model: 'text-embedding-004'
     });
 
     const pinecone = new Pinecone();
     pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
-    console.log("Pinecone index configured");
+    console.log('Pinecone index configured');
+
+    const vector = pinecone.data[0].embedding;
+    
+    if (!vector || vector.length === 0) {
+      console.error('❌ Empty embedding for chunk:', chunk);
+    } else if (vector.length !== 768) {
+      console.error(`❌ Dimension mismatch: got ${vector.length}, expected 768`);
+    }
 
     await PineconeStore.fromDocuments(chunkedDocs, embeddings, {
       pineconeIndex,
-      maxConcurrency: 5,
+      maxConcurrency: 5
     });
 
-    console.log("Data stored successfully");
+    console.log('Data stored successfully');
     History = []; // reset chat history
     res.json({ message: 'PDF uploaded & indexed successfully' });
   } catch (err) {
@@ -110,7 +118,7 @@ app.post('/ask', async (req, res) => {
       includeMetadata: true
     });
 
-    const context = searchResults.matches.map(m => m.metadata.text).join('\n\n---\n\n');
+    const context = searchResults.matches.map((m) => m.metadata.text).join('\n\n---\n\n');
 
     // Step 4: Get answer
     History.push({ role: 'user', parts: [{ text: rewrittenQ }] });
@@ -127,7 +135,6 @@ app.post('/ask', async (req, res) => {
 
     History.push({ role: 'model', parts: [{ text: ansRes.text }] });
     res.json({ answer: ansRes.text });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error answering question' });
