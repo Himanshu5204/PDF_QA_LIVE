@@ -53,15 +53,20 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GEMINI_API_KEY,
-      model: 'text-embedding-004'
+      // model: 'text-embedding-004'
+      model: 'textembedding-gecko'
     });
+
+    const testVec = await embeddings.embedQuery("hello world");
+    console.log("Embedding dimension:", testVec.length);
+
 
     const pinecone = new Pinecone();
     pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
     console.log('Pinecone index configured');
 
     const vector = pinecone.data[0].embedding;
-    
+
     if (!vector || vector.length === 0) {
       console.error('❌ Empty embedding for chunk:', chunk);
     } else if (vector.length !== 768) {
