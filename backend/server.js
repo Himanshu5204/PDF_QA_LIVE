@@ -53,25 +53,24 @@ app.post('/upload', upload.single('pdf'), async (req, res) => {
 
     const embeddings = new GoogleGenerativeAIEmbeddings({
       apiKey: process.env.GEMINI_API_KEY,
-      // model: 'text-embedding-004'
-      model: 'textembedding-gecko'
+      model: 'text-embedding-004'
+      //model: 'textembedding-gecko'
     });
 
-    const testVec = await embeddings.embedQuery("hello world");
-    console.log("Embedding dimension:", testVec.length);
-
+    const testVec = await embeddings.embedQuery('hello world');
+    console.log('Embedding dimension:', testVec.length);
 
     const pinecone = new Pinecone();
     pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME);
     console.log('Pinecone index configured');
 
-    const vector = pinecone.data[0].embedding;
+    // const vector = pinecone.data[0].embedding;
 
-    if (!vector || vector.length === 0) {
-      console.error('❌ Empty embedding for chunk:', chunk);
-    } else if (vector.length !== 768) {
-      console.error(`❌ Dimension mismatch: got ${vector.length}, expected 768`);
-    }
+    // if (!vector || vector.length === 0) {
+    //   console.error('❌ Empty embedding for chunk:', chunk);
+    // } else if (vector.length !== 768) {
+    //   console.error(`❌ Dimension mismatch: got ${vector.length}, expected 768`);
+    // }
 
     await PineconeStore.fromDocuments(chunkedDocs, embeddings, {
       pineconeIndex,
@@ -125,16 +124,33 @@ app.post('/ask', async (req, res) => {
 
     const context = searchResults.matches.map((m) => m.metadata.text).join('\n\n---\n\n');
 
-    // Step 4: Get answer
+    // Step 4: Get answer final answer
     History.push({ role: 'user', parts: [{ text: rewrittenQ }] });
     const ansRes = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
       contents: History,
       config: {
-        systemInstruction: `You are a Data Structure & Algorithm Expert. Use ONLY the context below to answer.
-        If answer not found, say "I could not find the answer in the provided document."
-        
-        Context: ${context}`
+        systemInstruction: `You are an expert tutor. 
+        - Use ONLY the following extracted PDF context to answer.
+        - If the user gave a short keyword (like "Array" or "Binary Search Tree"), still provide a complete explanation if context is partially relevant.
+        - If nothing relevant is found at all, say: "I could not find the answer in the provided document."
+        - Always answer in a friendly, engaging, and enthusiastic tone.
+        - If only keywords match then also provide information about that topics not everytime try to excat matching. 
+        - Give Some Examples by your own if answer is related to programming or technical topic or if possible.
+        - Use Some Specifc Format to represent information so use can easily read or understand.
+
+        ### Response Guidelines:      
+          - Use headings, bullet points, and lists.  
+          - Use code blocks for examples.  
+          - Use tables for comparisons when helpful.  
+          - Keep answers **clear, well-structured, and easy to read**.  
+          - If no relevant information is found at all, say:  
+            "I could not find the answer in the provided document."
+
+        Remember: prioritize **structured formatting** (headings, line breaks, tables, lists, code) over plain paragraphs.
+
+        Context:
+        ${context}`
       }
     });
 
