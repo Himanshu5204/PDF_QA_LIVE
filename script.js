@@ -98,7 +98,8 @@ questionForm.addEventListener('submit', async (e) => {
 function addMessage(text, type) {
   const msg = document.createElement('div');
   msg.classList.add('message', type === 'user' ? 'user-message' : 'bot-message');
-  msg.textContent = text;
+  // msg.textContent = text;
+  msg.innerHTML = marked.parse(text); // Use marked.js to render Markdown
   chatBox.appendChild(msg);
   chatBox.scrollTop = chatBox.scrollHeight;
 }

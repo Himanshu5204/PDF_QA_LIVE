@@ -131,7 +131,7 @@ app.post('/ask', async (req, res) => {
       contents: History,
       config: {
         systemInstruction: `You are an expert tutor. 
-        - Use ONLY the following extracted PDF context to answer.
+        - Use ONLY the following extracted PDF context to answer and Give answer in provided "Response Guidelines" Format .
         - If the user gave a short keyword (like "Array" or "Binary Search Tree"), still provide a complete explanation if context is partially relevant.
         - If nothing relevant is found at all, say: "I could not find the answer in the provided document."
         - Always answer in a friendly, engaging, and enthusiastic tone.
@@ -140,6 +140,7 @@ app.post('/ask', async (req, res) => {
         - Use Some Specifc Format to represent information so use can easily read or understand.
 
         ### Response Guidelines:      
+          - Use Next line when sentence ends or whenever need not give whole answer in single paragraph.
           - Use headings, bullet points, and lists.  
           - Use code blocks for examples.  
           - Use tables for comparisons when helpful.  
