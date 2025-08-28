@@ -11,7 +11,9 @@
   "keywords": [],
   "description": "",
   "dependencies": {
+    "@browserbasehq/stagehand": "^2.4.4",
     "@google/genai": "^1.13.0",
+    "@ibm-cloud/watsonx-ai": "^1.6.11",
     "@langchain/community": "^0.3.50",
     "@langchain/core": "^0.3.70",
     "@langchain/google-genai": "^0.2.16",
@@ -21,7 +23,9 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
+    "ibm-cloud-sdk-core": "^5.4.2",
     "multer": "^2.0.2",
+    "openai": "^5.16.0",
     "pdf-parse": "^1.1.1",
     "readline-sync": "^1.4.10"
   }
